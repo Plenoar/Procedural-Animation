@@ -1,101 +1,118 @@
-#include <stdio.h>
-#include <SDL3/SDL.h>
-#include <math.h>
+#include<stdio.h>
+#include<SDL3/SDL.h>
+#include<math.h>
 
 #define WHITE 0xFFFFFFFF // Define white color as RGBA 0xFFFFFFFF
 
+typedef struct 
+{
+    float x,y;
+    float radius;
+
+}CIRCLE;
+
+//function declarations 
+void DrawCircle(SDL_Renderer *renderer, CIRCLE circle, SDL_Color color);
+
+
 static SDL_Renderer *renderer = NULL;
 static SDL_Window *window = NULL;
+int main(void)
+{   
 
-typedef struct {
-    int x;
-    int y;
-    int length;
-}LINE;
+    SDL_CreateWindowAndRenderer("one",1800,1000,0,&window,&renderer);
 
-typedef struct {
-    double x;
-    double y;
-    double radius;
-} CIRCLE;
+    SDL_Surface *surface =  SDL_GetWindowSurface(window);
 
-void DrawPixel(SDL_Surface *surface, int x, int y, Uint32 color) {
-    if (x >= 0 && x < surface->w && y >= 0 && y < surface->h) {
-        Uint32 *pixels = (Uint32 *)surface->pixels;
-        pixels[(y * surface->w) + x] = color;
-    }
-}
-
-void DrawCircle(SDL_Surface *surface, CIRCLE circle, Uint32 color) {
-    int x = (int)circle.radius;
-    int y = 0;
-    int decision = 1 - x;
-
-    while (x >= y) {
-        DrawPixel(surface, (int)circle.x + x, (int)circle.y + y, color);
-        DrawPixel(surface, (int)circle.x - x, (int)circle.y + y, color);
-        DrawPixel(surface, (int)circle.x + x, (int)circle.y - y, color);
-        DrawPixel(surface, (int)circle.x - x, (int)circle.y - y, color);
-        DrawPixel(surface, (int)circle.x + y, (int)circle.y + x, color);
-        DrawPixel(surface, (int)circle.x - y, (int)circle.y + x, color);
-        DrawPixel(surface, (int)circle.x + y, (int)circle.y - x, color);
-        DrawPixel(surface, (int)circle.x - y, (int)circle.y - x, color);
-
-        y++;
-        if (decision <= 0) {
-            decision += 2 * y + 1;
-        } else {
-            x--;
-            decision += 2 * (y - x) + 1;
-        }
-    }
-}
-
-
-
-
-int main() {
-    SDL_Init(SDL_INIT_VIDEO);
-    SDL_CreateWindowAndRenderer("Fourier Transformation", 1900, 1000, SDL_WINDOW_FULLSCREEN, &window, &renderer);
-    SDL_Surface *surface = SDL_GetWindowSurface(window);
-
+    SDL_Color white = {255, 255, 255, 255};
     
+    SDL_Event event;     
+    
+        float θ = 1;
+        float θ1 = 1;
+        float θ2 = 1;
     int running = 1;
-    
-    CIRCLE circle = { 300, 500, 200 }; // Larger circle
-    float time = 0.0f;
 
-
-    while (running) {
-        SDL_Event event;
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_EVENT_QUIT) {
+    while(running)
+    {
+        while(SDL_PollEvent(&event))
+        {
+            if(event.type == SDL_EVENT_QUIT)
+            {
                 running = 0;
             }
         }
 
-        SDL_ClearSurface(surface, 0, 0, 0, 0); // Clear screen
+                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+                SDL_RenderClear(renderer);
 
-        DrawCircle(surface, circle, WHITE); // Draw large circle
-     
+                SDL_ClearSurface(surface,0,0,0,0);
+        
+                CIRCLE circle = {900,500,400};
+                DrawCircle(renderer, circle, white);
+    
+                float a  = circle.x + (circle.radius * cos(θ));
+                float b = circle.y + (circle.radius * sin(θ));
+                CIRCLE circle1 = {a,b,200};
+                DrawCircle(renderer,circle1,white);
+    
+                // parent circle = circle , child circle = circle 1 
+                // connect a line from parent to child 
+                SDL_SetRenderDrawColor(renderer, white.r, white.g, white.b, white.a);
+                SDL_RenderLine(renderer,circle.x,circle.y,circle1.x,circle1.y);
 
-        int x = circle.x + (circle.radius * cos(time));
-        int y = circle.y + (circle.radius * sin(time));
-        CIRCLE smallCircle = { x, y, 5 }; // Smaller circle radius = 50
-        DrawCircle(surface, smallCircle, WHITE); // Draw small circle
+                float c  = circle1.x + (circle1.radius * cos(θ1));
+                float d = circle1.y + (circle1.radius * sin(θ1));
+                CIRCLE circle2 = {c,d,100};
+                DrawCircle(renderer, circle2, white);    
 
+                SDL_RenderLine(renderer,circle1.x,circle1.y,circle2.x,circle2.y);
+    
+                
+                float e  = circle2.x + (circle2.radius * cos(θ2));
+                float f = circle2.y + (circle2.radius * sin(θ2));
+                CIRCLE circle3 = {e,f,50};
+                DrawCircle(renderer, circle3, white);    
+                
+                SDL_RenderLine(renderer,circle2.x,circle2.y,circle3.x,circle3.y);
+    
+                SDL_RenderPresent(renderer);
+            
+                θ += 0.01;
+                θ1 += 0.02;
+                θ2 += 0.04;
+    
 
-        SDL_UpdateWindowSurface(window);
-        SDL_Delay(16); // Approx. 60 FPS
-
-        time -= 0.05f; // Adjust speed
+                SDL_Delay(16);
+        
     }
 
+}
 
+void DrawCircle(SDL_Renderer *renderer, CIRCLE circle, SDL_Color color) {
+    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
     
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
-    
-    return 0;
+    int x = circle.radius;
+    int y = 0;
+    int err = 0;
+
+    while (x >= y) {
+        SDL_RenderPoint(renderer, circle.x + x, circle.y + y);
+        SDL_RenderPoint(renderer, circle.x + y, circle.y + x);
+        SDL_RenderPoint(renderer, circle.x - y, circle.y + x);
+        SDL_RenderPoint(renderer, circle.x - x, circle.y + y);
+        SDL_RenderPoint(renderer, circle.x - x, circle.y - y);
+        SDL_RenderPoint(renderer, circle.x - y, circle.y - x);
+        SDL_RenderPoint(renderer, circle.x + y, circle.y - x);
+        SDL_RenderPoint(renderer, circle.x + x, circle.y - y);
+
+        y += 1;
+        if (err <= 0) {
+            err += 2 * y + 1;
+        }
+        if (err > 0) {
+            x -= 1;
+            err -= 2 * x + 1;
+        }
+    }
 }
