@@ -1,7 +1,5 @@
-Drawing with Fourier Transformation 
 
-
-this is just a repo where i dabble with drawing things by using mathematical equations , i want to mainly focus on the fourier transformation but its
+this is just a repo where i dabble with procedural animations , i want to mainly focus on the fourier transformation but its
 hard to implement 
 
 so far i have added a  program which draws flowers
